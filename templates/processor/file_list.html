@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Список файлов</title>
+</head>
+<body>
+    <h2>Загруженные файлы</h2>
+    <ul>
+        {% for file in files %}
+            <li>
+                {{ file.file.name }}
+                <a href="{% url 'process_with_chatgpt' file.id %}">Обработать AI</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
