@@ -1,3 +1,5 @@
+import shutil
+
 import openpyxl
 import os
 
@@ -176,7 +178,7 @@ def send_to_chatgpt(text_data, prompt):
 
 
 def process_with_chatgpt(request, file_id):
-    """Отправляет обработанный файл в ChatGPT и позволяет скачать результат."""
+    """Обрабатывает файл, сохраняет результат и обновляет страницу."""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id)
     original_file_path = uploaded_file.file.path
     processed_file_path = process_xlsx(original_file_path)
@@ -191,7 +193,15 @@ def process_with_chatgpt(request, file_id):
 
         if result:
             final_file_path = apply_priorities_from_chatgpt(original_file_path, chatgpt_path)
-            if final_file_path:
-                return FileResponse(open(final_file_path, "rb"), as_attachment=True, filename=os.path.basename(final_file_path))
 
-    return render(request, "processor/error.html", {"message": "Ошибка обработки AI."})
+            if final_file_path:
+                # Копируем файл в uploads/ с _final
+                uploads_dir = os.path.join(settings.BASE_DIR, "uploads")
+                os.makedirs(uploads_dir, exist_ok=True)
+
+                final_filename = os.path.basename(final_file_path).replace("_processed", "_final")
+                final_path = os.path.join(uploads_dir, final_filename)
+                shutil.copy(final_file_path, final_path)
+
+    # Возвращаемся на главную страницу
+    return redirect("home")

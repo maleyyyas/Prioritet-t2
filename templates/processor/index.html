@@ -450,7 +450,7 @@
                     {% for file in files %}
                         <li>
                             {{ file.file.name }}
-                            <a href="{% url 'process_with_chatgpt' file.id %}" class="btn btn-primary">Обработать AI</a>
+                            <a href="{% url 'process_with_chatgpt' file.id %}" class="btn btn-primary" onclick="handleProcessing(event, this.href)">Обработать AI</a>
                         </li>
                     {% endfor %}
                 </ul>
@@ -625,6 +625,23 @@
                 }[priority];
             }
         });
+    </script>
+    <script>
+    function handleProcessing(event, url) {
+        event.preventDefault();
+    
+        // Создаём невидимый iframe, чтобы запустить обработку
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = url;
+    
+        // Когда iframe загружается (обработка завершена) — перезагрузка
+        iframe.onload = function () {
+            window.location.reload();
+        };
+    
+        document.body.appendChild(iframe);
+    }
     </script>
 </body>
 </html>
