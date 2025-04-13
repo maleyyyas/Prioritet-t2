@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приоритизация тест-кейсов</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8D6E63;
+            --primary-hover: #6D4C41;
+            --secondary: #f8f9fa;
+            --text: #3E2723;
+            --text-light: #5D4037;
+            --border: #D7CCC8;
+            --success: #689F38;
+            --white: #ffffff;
+            --header-bg: #5D4037;
+            --header-text: #EFEBE9;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #EFEBE9;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 10 Q60 0 70 10 T90 30 Q100 40 90 50 T70 70 Q60 80 50 70 T30 50 Q20 40 30 30 T50 10' fill='%238D6E63' fill-opacity='0.1'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 Q40 0 45 10 T55 30 Q60 40 50 45 T30 55 Q20 60 15 50 T5 30 Q0 20 10 15 T30 5' fill='%235D4037' fill-opacity='0.1'/%3E%3C/svg%3E");
+            background-attachment: fixed;
+            animation: bgMove 120s linear infinite;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Новый мультяшный шрифт для заголовка */
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            color: var(--header-text);
+            font-family: 'Patrick Hand', cursive;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--header-text);
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+
+        /* Стили для неактивных кнопок */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-primary:disabled {
+            background: #B39D97;
+            box-shadow: none;
+        }
+        
+        .btn-secondary:disabled {
+            background: #E5DAD7;
+            color: #8C726B;
+        }
+
+        /* Остальные стили без изменений */
+        @keyframes bgMove {
+            0% { background-position: 0 0, 50px 100px; }
+            100% { background-position: 1000px 500px, 800px 400px; }
+        }
+
+        .owl-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 140px;
+            height: 140px;
+            background-image: url('https://png.pngtree.com/png-clipart/20231006/original/pngtree-cute-owl-in-cartoon-png-image_13128467.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 100;
+            cursor: pointer;
+            transform-origin: bottom center;
+            animation: owlFloat 3s ease-in-out infinite;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+        }
+
+        @keyframes owlFloat {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        .owl-message {
+            position: absolute;
+            right: 150px;
+            bottom: 40px;
+            background: var(--white);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            max-width: 220px;
+            opacity: 0;
+            transition: opacity 0.4s;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .owl-message:after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            bottom: 15px;
+            border-width: 8px 0 8px 12px;
+            border-style: solid;
+            border-color: transparent var(--white);
+        }
+
+        .owl-assistant:hover .owl-message {
+            opacity: 1;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 2rem 0;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 2rem;
+            position: relative;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid var(--border);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            box-shadow: 0 2px 4px rgba(141, 110, 99, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--border);
+            color: var(--text);
+            box-shadow: 0 2px 4px rgba(215, 204, 200, 0.3);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #C5B9B5;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #d32f2f;
+            color: var(--white);
+            box-shadow: 0 2px 4px rgba(211, 47, 47, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: #b71c1c;
+            transform: translateY(-2px);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--secondary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .file-info svg {
+            width: 24px;
+            height: 24px;
+            color: var(--success);
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-size {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .results {
+            margin-top: 2rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .test-cases {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .test-cases th, .test-cases td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .test-cases th {
+            font-weight: 500;
+            background: var(--secondary);
+        }
+
+        .test-cases tr:last-child td {
+            border-bottom: none;
+        }
+
+        .priority {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .priority-high {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .priority-medium {
+            background: #fff8e1;
+            color: #f57f17;
+            border: 1px solid #ffcc80;
+        }
+
+        .priority-low {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--text-light);
+            font-size: 0.875rem;
+            padding: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 1.5rem;
+            }
+            
+            .container {
+                padding: 0 1.5rem 1.5rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .owl-assistant {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .owl-message {
+                right: 110px;
+                max-width: 180px;
+                font-size: 13px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="owl-assistant" id="owlAssistant">
+        <div class="owl-message" id="owlMessage">Ух-ух! Я помогу с приоритизацией тест-кейсов!</div>
+    </div>
+
+    <header>
+        <div class="header-content">
+            <h1>Приоритизация тест-кейсов</h1>
+            <p class="subtitle">Загрузите файл с тест-кейсами, и система автоматически расставит приоритеты</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2 class="card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                Загрузка файла
+            </h2>
+            
+            <form method="post" enctype="multipart/form-data" class="actions">
+                {% csrf_token %}
+                {{ form.file }}
+                <button type="submit" class="btn btn-primary">Загрузить файл</button>
+            </form>
+            
+            <div id="fileInfo" class="file-info hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <div class="file-details">
+                    <div class="file-name" id="fileName">Файл не выбран</div>
+                    <div class="file-size" id="fileSize">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsSection" class="hidden">
+            <div class="card">
+                <div class="results-header">
+                    <h2 class="card-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Результаты приоритизации
+                    </h2>
+                    <div>
+                        <button id="deleteResultsBtn" class="btn btn-danger" style="margin-right: 1rem;">
+                            Удалить результаты
+                        </button>
+                        <button id="downloadBtn" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Скачать
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="results">
+                    <table class="test-cases">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Название тест-кейса</th>
+                                <th>Приоритет</th>
+                                <th>Рекомендации</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Загруженные файлы</h2>
+            {% if files %}
+                <ul>
+                    {% for file in files %}
+                        <li>
+                            {{ file.file.name }}
+                            <a href="{% url 'process_with_chatgpt' file.id %}" class="btn btn-primary">Обработать AI</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Нет загруженных файлов</p>
+            {% endif %}
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Обработанные файлы</h2>
+            {% if processed_files %}
+                <ul>
+                    {% for file in processed_files %}
+                        <li>
+                            <a href="/uploads/{{ file }}" class="btn btn-secondary">{{ file }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Нет обработанных файлов</p>
+            {% endif %}
+        </div>
+
+        <footer>
+            © 2025 Система приоритизации тест-кейсов. Все права защищены.
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const owlAssistant = document.getElementById('owlAssistant');
+            const owlMessage = document.getElementById('owlMessage');
+            
+            const owlMessages = {
+                default: "Ух-ух! Я помогу с приоритизацией тест-кейсов!",
+                uploadBtn: "Нажми здесь, чтобы выбрать файл",
+                prioritizeBtn: "Нажми эту кнопку после выбора файла",
+                downloadBtn: "Ты можешь сохранить себе результат!",
+                changeFileBtn: "Хочешь выбрать другой файл?",
+                deleteResultsBtn: "Эта кнопка нужна, чтобы удалить результаты",
+                fileUploaded: "Файл загружен! Теперь нажмите 'Начать приоритизацию'",
+                processing: "Идет анализ тест-кейсов...",
+                resultsReady: "Ух-ух! Результаты готовы! Можешь проверять таблицу"
+            };
+            
+            // Инициализация состояний
+            const uploadBtn = document.getElementById('uploadBtn');
+            const prioritizeBtn = document.getElementById('prioritizeBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const changeFileBtn = document.getElementById('changeFileBtn');
+            const deleteResultsBtn = document.getElementById('deleteResultsBtn');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsTable = document.getElementById('resultsTable');
+
+            // Начальное состояние кнопок
+            prioritizeBtn.disabled = true;
+            changeFileBtn.disabled = true;
+
+            // Подсказки при наведении
+            const elementsWithTooltips = [
+                {element: uploadBtn, message: owlMessages.uploadBtn},
+                {element: prioritizeBtn, message: owlMessages.prioritizeBtn},
+                {element: downloadBtn, message: owlMessages.downloadBtn},
+                {element: changeFileBtn, message: owlMessages.changeFileBtn},
+                {element: deleteResultsBtn, message: owlMessages.deleteResultsBtn}
+            ];
+
+            elementsWithTooltips.forEach(item => {
+                item.element.addEventListener('mouseenter', () => {
+                    owlMessage.textContent = item.message;
+                    owlMessage.style.opacity = 1;
+                });
+                item.element.addEventListener('mouseleave', () => {
+                    owlMessage.style.opacity = 0;
+                });
+            });
+
+            // Обработчики событий
+            uploadBtn.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    fileName.textContent = file.name;
+                    fileSize.textContent = formatFileSize(file.size);
+                    fileInfo.classList.remove('hidden');
+                    prioritizeBtn.disabled = false;
+                    changeFileBtn.disabled = false;
+                    
+                    owlMessage.textContent = owlMessages.fileUploaded;
+                    owlMessage.style.opacity = 1;
+                    setTimeout(() => owlMessage.style.opacity = 0, 3000);
+                } else {
+                    prioritizeBtn.disabled = true;
+                    changeFileBtn.disabled = true;
+                }
+            });
+
+            changeFileBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            prioritizeBtn.addEventListener('click', function() {
+                prioritizeBtn.innerHTML = '<div class="spinner"></div> Обработка...';
+                prioritizeBtn.disabled = true;
+                
+                owlMessage.textContent = owlMessages.processing;
+                owlMessage.style.opacity = 1;
+                
+                setTimeout(() => {
+                    showResults();
+                    prioritizeBtn.innerHTML = 'Начать приоритизацию';
+                    prioritizeBtn.disabled = false;
+                    
+                    owlMessage.textContent = owlMessages.resultsReady;
+                    setTimeout(() => owlMessage.style.opacity = 0, 3000);
+                }, 2000);
+            });
+
+            deleteResultsBtn.addEventListener('click', function() {
+                resultsSection.classList.add('hidden');
+                resultsTable.innerHTML = '';
+                if (!fileInput.files.length) {
+                    prioritizeBtn.disabled = true;
+                    changeFileBtn.disabled = true;
+                }
+            });
+
+            downloadBtn.addEventListener('click', function() {
+                alert('Функция скачивания будет реализована в бэкенде');
+            });
+
+            // Вспомогательные функции
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function showResults() {
+                resultsSection.classList.remove('hidden');
+                const testData = [
+                    { id: '1', name: 'Что-то важное', priority: 'high', recommendation: 'Проверить в первую очередь' },
+                    { id: '2', name: 'Что-то среднее', priority: 'medium', recommendation: 'Проверить после основных сценариев' },
+                    { id: '3', name: 'Что-то не особо важное', priority: 'low', recommendation: 'Проверить в последнюю очередь' }
+                ];
+                
+                resultsTable.innerHTML = '';
+                testData.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td><span class="priority priority-${item.priority}">${getPriorityLabel(item.priority)}</span></td>
+                        <td>${item.recommendation}</td>
+                    `;
+                    resultsTable.appendChild(row);
+                });
+            }
+
+            function getPriorityLabel(priority) {
+                return {
+                    high: 'Высокий',
+                    medium: 'Средний',
+                    low: 'Низкий'
+                }[priority];
+            }
+        });
+    </script>
+</body>
+</html>

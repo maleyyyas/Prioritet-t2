@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Обработка Excel-файлов</title>
+</head>
+<body>
+    <h1>Обработка Excel-файлов с помощью AI</h1>
+
+    <!-- Загрузка файла -->
+    <h2>Загрузить файл</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Загрузить</button>
+    </form>
+
+    <!-- Загруженные файлы -->
+    <h2>Загруженные файлы</h2>
+    {% if files %}
+        <ul>
+        {% for file in files %}
+            <li>
+                {{ file.file.name }}
+                <a href="{% url 'process_with_chatgpt' file.id %}">Обработать AI</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет загруженных файлов</p>
+    {% endif %}
+
+    <!-- Обработанные файлы -->
+    <h2>Обработанные файлы</h2>
+    {% if processed_files %}
+        <ul>
+        {% for file in processed_files %}
+            <li>
+                <a href="/uploads/{{ file }}">{{ file }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет обработанных файлов</p>
+    {% endif %}
+</body>
+</html>

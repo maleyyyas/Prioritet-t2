@@ -5,10 +5,42 @@ import pandas as pd
 import json
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import FileResponse
+from django.http import FileResponse, Http404
 from .forms import UploadFileForm
 from .models import UploadedFile
 from django.conf import settings
+
+
+def upload_and_list_files(request):
+    """Объединённая view: загрузка + список загруженных/обработанных."""
+
+    if request.method == "POST":
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect("home")
+    else:
+        form = UploadFileForm()
+
+    # Отфильтровываем реально существующие
+    existing_files = [
+        f for f in UploadedFile.objects.all()
+        if os.path.exists(f.file.path)
+    ]
+
+    # Обработанные — ищем по имени "_final"
+    uploads_dir = os.path.join(settings.BASE_DIR, "uploads")
+    processed_files = []
+    if os.path.exists(uploads_dir):
+        for filename in os.listdir(uploads_dir):
+            if "_final" in filename and filename.endswith(".xlsx"):
+                processed_files.append(filename)
+
+    return render(request, "processor/index.html", {
+        "form": form,
+        "files": existing_files,
+        "processed_files": processed_files
+    })
 
 
 def upload_file(request):
@@ -52,9 +84,26 @@ def process_xlsx(file_path):
 
 
 def file_list(request):
-    """Выводит список загруженных файлов с кнопками обработки."""
-    files = UploadedFile.objects.all()
-    return render(request, "processor/file_list.html", {"files": files})
+    """Выводит только актуальные загруженные файлы + обработанные."""
+
+    # Фильтрация: показываем только те записи, у которых файл существует физически
+    all_uploaded = UploadedFile.objects.all()
+    existing_uploaded_files = [
+        f for f in all_uploaded if os.path.exists(f.file.path)
+    ]
+
+    # Обработанные файлы из папки /uploads/
+    uploads_dir = os.path.join(settings.BASE_DIR, "uploads")
+    processed_files = []
+    if os.path.exists(uploads_dir):
+        for filename in os.listdir(uploads_dir):
+            if "_final" in filename and filename.endswith(".xlsx"):
+                processed_files.append(filename)
+
+    return render(request, "processor/file_list.html", {
+        "files": existing_uploaded_files,
+        "processed_files": processed_files,
+    })
 
 
 def convert_xlsx_to_text(file_path):
@@ -69,10 +118,35 @@ def convert_text_to_xlsx(json_text, output_path):
         data = json.loads(json_text)
         df = pd.DataFrame(data)
         df.to_excel(output_path, index=False)
-        return output_path
+        return True
     except Exception as e:
         print(f"Ошибка преобразования: {e}")
         return None
+
+
+def apply_priorities_from_chatgpt(original_path, chatgpt_path):
+    """
+    Обновляет колонку 'Приоритет' в оригинальном файле, используя данные из ChatGPT,
+    где есть колонки '№' и 'Приоритет'.
+    """
+    original_df = pd.read_excel(original_path)
+    chatgpt_df = pd.read_excel(chatgpt_path)
+
+    # Проверим, что нужные колонки есть
+    if "№" not in original_df.columns or "Приоритет" not in chatgpt_df.columns:
+        print("Ошибка: отсутствует нужная колонка в одном из файлов.")
+        return None
+
+    # Создаём маппинг: № → Приоритет
+    priority_mapping = chatgpt_df.set_index("№")["Приоритет"].to_dict()
+
+    # Обновляем значения в оригинальной таблице
+    original_df["Приоритет"] = original_df["№"].map(priority_mapping).combine_first(original_df["Приоритет"])
+
+    # Сохраняем новый файл
+    final_path = original_path.replace(".xlsx", "_final.xlsx")
+    original_df.to_excel(final_path, index=False)
+    return final_path
 
 
 def send_to_chatgpt(text_data, prompt):
@@ -104,18 +178,20 @@ def send_to_chatgpt(text_data, prompt):
 def process_with_chatgpt(request, file_id):
     """Отправляет обработанный файл в ChatGPT и позволяет скачать результат."""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id)
-    processed_file_path = process_xlsx(uploaded_file.file.path)
+    original_file_path = uploaded_file.file.path
+    processed_file_path = process_xlsx(original_file_path)
 
     text_data = convert_xlsx_to_text(processed_file_path)
-
     prompt = settings.CHATGPT_PROMPT
     processed_text = send_to_chatgpt(text_data, prompt)
 
     if processed_text:
-        new_file_path = uploaded_file.file.path.replace(".xlsx", "_chatgpt.xlsx")
-        saved_file_path = convert_text_to_xlsx(processed_text, new_file_path)
+        chatgpt_path = original_file_path.replace(".xlsx", "_chatgpt.xlsx")
+        result = convert_text_to_xlsx(processed_text, chatgpt_path)
 
-        if saved_file_path:
-            return FileResponse(open(saved_file_path, "rb"), as_attachment=True, filename=os.path.basename(saved_file_path))
+        if result:
+            final_file_path = apply_priorities_from_chatgpt(original_file_path, chatgpt_path)
+            if final_file_path:
+                return FileResponse(open(final_file_path, "rb"), as_attachment=True, filename=os.path.basename(final_file_path))
 
     return render(request, "processor/error.html", {"message": "Ошибка обработки AI."})

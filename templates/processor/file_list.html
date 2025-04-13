@@ -14,5 +14,20 @@
             </li>
         {% endfor %}
     </ul>
+
+    <hr>
+
+    <h2>Обработанные файлы</h2>
+    {% if processed_files %}
+        <ul>
+            {% for filename in processed_files %}
+                <li>
+                    <a href="/uploads/{{ filename }}" download>{{ filename }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет обработанных файлов.</p>
+    {% endif %}
 </body>
 </html>
