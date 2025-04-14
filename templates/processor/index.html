@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Приоритизация тест-кейсов</title>
+    <title>Приоритезация тест-кейсов</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -368,12 +368,12 @@
 </head>
 <body>
     <div class="owl-assistant" id="owlAssistant">
-        <div class="owl-message" id="owlMessage">Ух-ух! Я помогу с приоритизацией тест-кейсов!</div>
+        <div class="owl-message" id="owlMessage">Ух-ух! Я помогу с приоритезацией тест-кейсов!</div>
     </div>
 
     <header>
         <div class="header-content">
-            <h1>Приоритизация тест-кейсов</h1>
+            <h1>Приоритезация тест-кейсов</h1>
             <p class="subtitle">Загрузите файл с тест-кейсами, и система автоматически расставит приоритеты</p>
         </div>
     </header>
@@ -387,11 +387,39 @@
                 Загрузка файла
             </h2>
             
-            <form method="post" enctype="multipart/form-data" class="actions">
-                {% csrf_token %}
-                {{ form.file }}
-                <button type="submit" class="btn btn-primary">Загрузить файл</button>
-            </form>
+            <div class="actions" style="display: flex; gap: 1rem; align-items: center;">
+                <form method="post" enctype="multipart/form-data" id="uploadForm" style="margin: 0;">
+                    {% csrf_token %}
+                    <input type="file" name="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" hidden>
+                    <label for="fileInput" class="btn btn-primary" style="cursor: pointer; margin: 0;">
+                        Загрузить файл
+                    </label>
+                </form>
+
+                <a href="{% if current_file %}{% url 'process_with_chatgpt' %}{% else %}#{% endif %}"
+                   class="btn {% if current_file %}btn-primary{% else %}btn-secondary disabled{% endif %}"
+                    style="text-decoration: none;">
+                    Начать приоритезацию
+                </a>
+            </div>
+
+            {% if current_file %}
+                <div class="file-info" style="margin-top: 1rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <div class="file-details">
+                        <div class="file-name">
+                            {{ current_file.file.name|cut:"uploads/" }}
+                        </div>
+                        <div class="file-size">
+                            {% with current_file.file.size|filesizeformat as size %}
+                                {{ size }}
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
             
             <div id="fileInfo" class="file-info hidden">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
@@ -404,78 +432,64 @@
             </div>
         </div>
 
-        <div id="resultsSection" class="hidden">
-            <div class="card">
-                <div class="results-header">
-                    <h2 class="card-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Результаты приоритизации
-                    </h2>
-                    <div>
-                        <button id="deleteResultsBtn" class="btn btn-danger" style="margin-right: 1rem;">
-                            Удалить результаты
-                        </button>
-                        <button id="downloadBtn" class="btn btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                            Скачать
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="results">
-                    <table class="test-cases">
-                        <thead>
+        {% if processed_filename and chatgpt_table %}
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="card-title">Результат приоритезации</h2>
+                <a href="/uploads/{{ processed_filename }}" class="btn btn-primary">Скачать результат</a>
+            </div>
+        
+            <div class="results">
+                <table class="test-cases">
+                    <thead>
+                        <tr>
+                            {% for key in chatgpt_table.0.keys %}
+                                <th>{{ key }}</th>
+                            {% endfor %}
+                            <th>Рекомендация</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in chatgpt_table %}
                             <tr>
-                                <th>ID</th>
-                                <th>Название тест-кейса</th>
-                                <th>Приоритет</th>
-                                <th>Рекомендации</th>
+                                {% for key, cell in row.items %}
+                                    {% if key == "Приоритет" %}
+                                        <td>
+                                            {% if cell == 1 %}
+                                                <span style="color: red; font-weight: bold;">Высокий</span>
+                                            {% elif cell == 2 %}
+                                                <span style="color: orange; font-weight: bold;">Средний</span>
+                                            {% elif cell == 3 %}
+                                                <span style="color: green; font-weight: bold;">Низкий</span>
+                                            {% else %}
+                                                {{ cell }}
+                                            {% endif %}
+                                        </td>
+                                    {% else %}
+                                        <td>{{ cell }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                                <td>
+                                    {% if row.Приоритет == 1 %}
+                                        Проверить в первую очередь
+                                    {% elif row.Приоритет == 2 %}
+                                        Проверить после основных сценариев
+                                    {% elif row.Приоритет == 3 %}
+                                        Проверить в последнюю очередь
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody id="resultsTable">
-                        </tbody>
-                    </table>
-                </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-        
-        <div class="card">
-            <h2 class="card-title">Загруженные файлы</h2>
-            {% if files %}
-                <ul>
-                    {% for file in files %}
-                        <li>
-                            {{ file.file.name }}
-                            <a href="{% url 'process_with_chatgpt' file.id %}" class="btn btn-primary" onclick="handleProcessing(event, this.href)">Обработать AI</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Нет загруженных файлов</p>
-            {% endif %}
-        </div>
-        
-        <div class="card">
-            <h2 class="card-title">Обработанные файлы</h2>
-            {% if processed_files %}
-                <ul>
-                    {% for file in processed_files %}
-                        <li>
-                            <a href="/uploads/{{ file }}" class="btn btn-secondary">{{ file }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Нет обработанных файлов</p>
-            {% endif %}
-        </div>
+        {% endif %}
 
         <footer>
-            © 2025 Система приоритизации тест-кейсов. Все права защищены.
+            © 2025 Система приоритезации тест-кейсов. Все права защищены.
         </footer>
     </div>
 
@@ -485,13 +499,13 @@
             const owlMessage = document.getElementById('owlMessage');
             
             const owlMessages = {
-                default: "Ух-ух! Я помогу с приоритизацией тест-кейсов!",
+                default: "Ух-ух! Я помогу с приоритезацией тест-кейсов!",
                 uploadBtn: "Нажми здесь, чтобы выбрать файл",
                 prioritizeBtn: "Нажми эту кнопку после выбора файла",
                 downloadBtn: "Ты можешь сохранить себе результат!",
                 changeFileBtn: "Хочешь выбрать другой файл?",
                 deleteResultsBtn: "Эта кнопка нужна, чтобы удалить результаты",
-                fileUploaded: "Файл загружен! Теперь нажмите 'Начать приоритизацию'",
+                fileUploaded: "Файл загружен! Теперь нажмите 'Начать приоритезацию'",
                 processing: "Идет анализ тест-кейсов...",
                 resultsReady: "Ух-ух! Результаты готовы! Можешь проверять таблицу"
             };
@@ -537,19 +551,7 @@
 
             fileInput.addEventListener('change', function(e) {
                 if (e.target.files.length > 0) {
-                    const file = e.target.files[0];
-                    fileName.textContent = file.name;
-                    fileSize.textContent = formatFileSize(file.size);
-                    fileInfo.classList.remove('hidden');
-                    prioritizeBtn.disabled = false;
-                    changeFileBtn.disabled = false;
-                    
-                    owlMessage.textContent = owlMessages.fileUploaded;
-                    owlMessage.style.opacity = 1;
-                    setTimeout(() => owlMessage.style.opacity = 0, 3000);
-                } else {
-                    prioritizeBtn.disabled = true;
-                    changeFileBtn.disabled = true;
+                    document.getElementById('uploadForm').submit();
                 }
             });
 
@@ -566,7 +568,7 @@
                 
                 setTimeout(() => {
                     showResults();
-                    prioritizeBtn.innerHTML = 'Начать приоритизацию';
+                    prioritizeBtn.innerHTML = 'Начать приоритезацию';
                     prioritizeBtn.disabled = false;
                     
                     owlMessage.textContent = owlMessages.resultsReady;
@@ -627,21 +629,26 @@
         });
     </script>
     <script>
-    function handleProcessing(event, url) {
-        event.preventDefault();
-    
-        // Создаём невидимый iframe, чтобы запустить обработку
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = url;
-    
-        // Когда iframe загружается (обработка завершена) — перезагрузка
-        iframe.onload = function () {
-            window.location.reload();
-        };
-    
-        document.body.appendChild(iframe);
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileInput = document.getElementById("fileInput");
+        const form = document.getElementById("uploadForm");
+
+        fileInput.addEventListener("change", function () {
+            if (fileInput.files.length > 0) {
+                form.submit();
+            }
+        });
+    });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const button = document.querySelector("a.btn.disabled");
+            if (button) {
+                button.addEventListener("click", function (e) {
+                    e.preventDefault();
+                });
+            }
+        });
     </script>
 </body>
 </html>

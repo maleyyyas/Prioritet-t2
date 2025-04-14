@@ -9,6 +9,7 @@ def upload_to(instance, filename):
 class UploadedFile(models.Model):
     file = models.FileField(upload_to=upload_to)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_current = models.BooleanField(default=False)
 
     def __str__(self):
         return self.file.name

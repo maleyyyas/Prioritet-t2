@@ -14,34 +14,41 @@ from django.conf import settings
 
 
 def upload_and_list_files(request):
-    """Объединённая view: загрузка + список загруженных/обработанных."""
+    """Загрузка одного файла и отображение состояния."""
+    current_file = UploadedFile.objects.filter(is_current=True).first()
+    processed_filename = None
+
+    # 🧼 Чистим, если файл не существует
+    if current_file and not os.path.exists(current_file.file.path):
+        current_file.delete()
+        current_file = None
 
     if request.method == "POST":
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            UploadedFile.objects.filter(is_current=True).delete()
+            new_file = form.save(commit=False)
+            new_file.is_current = True
+            new_file.save()
             return redirect("home")
     else:
         form = UploadFileForm()
 
-    # Отфильтровываем реально существующие
-    existing_files = [
-        f for f in UploadedFile.objects.all()
-        if os.path.exists(f.file.path)
-    ]
+    # Проверяем финальный файл
+    if current_file:
+        base_name = os.path.splitext(os.path.basename(current_file.file.name))[0]
+        final_name = f"{base_name}_final.xlsx"
+        final_path = os.path.join(settings.BASE_DIR, "uploads", final_name)
+        if os.path.exists(final_path):
+            processed_filename = final_name
 
-    # Обработанные — ищем по имени "_final"
-    uploads_dir = os.path.join(settings.BASE_DIR, "uploads")
-    processed_files = []
-    if os.path.exists(uploads_dir):
-        for filename in os.listdir(uploads_dir):
-            if "_final" in filename and filename.endswith(".xlsx"):
-                processed_files.append(filename)
+    chatgpt_table = request.session.pop("chatgpt_table", None)
 
     return render(request, "processor/index.html", {
         "form": form,
-        "files": existing_files,
-        "processed_files": processed_files
+        "current_file": current_file,
+        "processed_filename": processed_filename,
+        "chatgpt_table": chatgpt_table,  # 👈 добавили
     })
 
 
@@ -148,7 +155,6 @@ def apply_priorities_from_chatgpt(original_path, chatgpt_path):
     # Сохраняем новый файл
     final_path = original_path.replace(".xlsx", "_final.xlsx")
     original_df.to_excel(final_path, index=False)
-    return final_path
 
 
 def send_to_chatgpt(text_data, prompt):
@@ -177,9 +183,12 @@ def send_to_chatgpt(text_data, prompt):
     return None
 
 
-def process_with_chatgpt(request, file_id):
-    """Обрабатывает файл, сохраняет результат и обновляет страницу."""
-    uploaded_file = get_object_or_404(UploadedFile, id=file_id)
+def process_with_chatgpt(request):
+    """Обрабатывает текущий файл, сохраняет результат и обновляет страницу."""
+    uploaded_file = UploadedFile.objects.filter(is_current=True).first()
+    if not uploaded_file:
+        return render(request, "processor/error.html", {"message": "Нет текущего файла для обработки."})
+
     original_file_path = uploaded_file.file.path
     processed_file_path = process_xlsx(original_file_path)
 
@@ -192,16 +201,11 @@ def process_with_chatgpt(request, file_id):
         result = convert_text_to_xlsx(processed_text, chatgpt_path)
 
         if result:
-            final_file_path = apply_priorities_from_chatgpt(original_file_path, chatgpt_path)
+            apply_priorities_from_chatgpt(original_file_path, chatgpt_path)
+            try:
+                parsed_data = json.loads(processed_text)
+                request.session['chatgpt_table'] = parsed_data
+            except Exception as e:
+                print("Ошибка парсинга ответа от ChatGPT:", e)
 
-            if final_file_path:
-                # Копируем файл в uploads/ с _final
-                uploads_dir = os.path.join(settings.BASE_DIR, "uploads")
-                os.makedirs(uploads_dir, exist_ok=True)
-
-                final_filename = os.path.basename(final_file_path).replace("_processed", "_final")
-                final_path = os.path.join(uploads_dir, final_filename)
-                shutil.copy(final_file_path, final_path)
-
-    # Возвращаемся на главную страницу
     return redirect("home")
