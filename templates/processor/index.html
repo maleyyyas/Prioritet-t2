@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Приоритезация тест-кейсов</title>
+    <title>Приоритизация тест-кейсов</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik+Bubbles&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #8D6E63;
@@ -26,7 +26,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #EFEBE9;
-            background-image: 
+            background-image:
                 url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 10 Q60 0 70 10 T90 30 Q100 40 90 50 T70 70 Q60 80 50 70 T30 50 Q20 40 30 30 T50 10' fill='%238D6E63' fill-opacity='0.1'/%3E%3C/svg%3E"),
                 url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 Q40 0 45 10 T55 30 Q60 40 50 45 T30 55 Q20 60 15 50 T5 30 Q0 20 10 15 T30 5' fill='%235D4037' fill-opacity='0.1'/%3E%3C/svg%3E");
             background-attachment: fixed;
@@ -37,13 +37,12 @@
             min-height: 100vh;
         }
 
-        /* Новый мультяшный шрифт для заголовка */
         h1 {
-            font-size: 2.8rem;
+            font-size: 3.2rem;
             font-weight: 400;
             margin-bottom: 1rem;
             color: var(--header-text);
-            font-family: 'Patrick Hand', cursive;
+            font-family: 'Rubik Bubbles', monospace;
             letter-spacing: 1px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
@@ -54,28 +53,26 @@
             opacity: 0.9;
             max-width: 600px;
             margin: 0 auto;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Nunito', sans-serif;
             line-height: 1.6;
         }
 
-        /* Стили для неактивных кнопок */
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none !important;
         }
-        
+
         .btn-primary:disabled {
             background: #B39D97;
             box-shadow: none;
         }
-        
+
         .btn-secondary:disabled {
             background: #E5DAD7;
             color: #8C726B;
         }
 
-        /* Остальные стили без изменений */
         @keyframes bgMove {
             0% { background-position: 0 0, 50px 100px; }
             100% { background-position: 1000px 500px, 800px 400px; }
@@ -197,6 +194,7 @@
             transition: all 0.2s;
             border: none;
             font-size: 1rem;
+            text-decoration: none;
         }
 
         .btn-primary {
@@ -340,20 +338,21 @@
             .header-content {
                 padding: 0 1.5rem;
             }
-            
+
             .container {
                 padding: 0 1.5rem 1.5rem;
             }
-            
+
             .actions {
                 flex-direction: column;
+                align-items: flex-start;
             }
-            
+
             .owl-assistant {
                 width: 100px;
                 height: 100px;
             }
-            
+
             .owl-message {
                 right: 110px;
                 max-width: 180px;
@@ -368,12 +367,12 @@
 </head>
 <body>
     <div class="owl-assistant" id="owlAssistant">
-        <div class="owl-message" id="owlMessage">Ух-ух! Я помогу с приоритезацией тест-кейсов!</div>
+        <div class="owl-message" id="owlMessage">Ух-ух! Я помогу с приоритизацией тест-кейсов!</div>
     </div>
 
     <header>
         <div class="header-content">
-            <h1>Приоритезация тест-кейсов</h1>
+            <h1>Приоритизация тест-кейсов</h1>
             <p class="subtitle">Загрузите файл с тест-кейсами, и система автоматически расставит приоритеты</p>
         </div>
     </header>
@@ -386,25 +385,39 @@
                 </svg>
                 Загрузка файла
             </h2>
-            
-            <div class="actions" style="display: flex; gap: 1rem; align-items: center;">
-                <form method="post" enctype="multipart/form-data" id="uploadForm" style="margin: 0;">
+
+            <div class="actions">
+                <form method="post" enctype="multipart/form-data" id="uploadForm" style="display: contents;">
                     {% csrf_token %}
-                    <input type="file" name="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" hidden>
-                    <label for="fileInput" class="btn btn-primary" style="cursor: pointer; margin: 0;">
+                    <button type="button" id="uploadBtn" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
                         Загрузить файл
-                    </label>
+                    </button>
+                    <input type="file" name="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
                 </form>
 
-                <a href="{% if current_file %}{% url 'process_with_chatgpt' %}{% else %}#{% endif %}"
-                   class="btn {% if current_file %}btn-primary{% else %}btn-secondary disabled{% endif %}"
-                    style="text-decoration: none;">
-                    Начать приоритезацию
-                </a>
+                <form method="post" action="{% url 'process_with_chatgpt' %}" style="display: inline;">
+    {% csrf_token %}
+    <button type="submit"
+            id="prioritizeBtn"
+            class="btn {% if current_file %}btn-primary{% else %}btn-primary disabled{% endif %}"
+            {% if not current_file %}disabled{% endif %}>
+        Начать приоритизацию
+    </button>
+</form>
+
+                <button id="changeFileBtn" class="btn btn-secondary" {% if not current_file %}disabled{% endif %}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Выбрать другой
+                </button>
             </div>
 
             {% if current_file %}
-                <div class="file-info" style="margin-top: 1rem;">
+                <div class="file-info">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -420,25 +433,43 @@
                     </div>
                 </div>
             {% endif %}
-            
-            <div id="fileInfo" class="file-info hidden">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                <div class="file-details">
-                    <div class="file-name" id="fileName">Файл не выбран</div>
-                    <div class="file-size" id="fileSize">-</div>
-                </div>
-            </div>
         </div>
 
         {% if processed_filename and chatgpt_table %}
         <div class="card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 class="card-title">Результат приоритезации</h2>
-                <a href="/uploads/{{ processed_filename }}" class="btn btn-primary">Скачать результат</a>
+            <div class="results-header">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Результаты приоритизации
+                </h2>
+                <div>
+                    <form method="post" style="display: inline;" id="deleteResultsForm">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete_files">
+    <button type="submit"
+            id="deleteResultsBtn"
+            class="btn btn-danger"
+            style="margin-right: 1rem;"
+            data-owl-tooltip="Эта кнопка удалит все загруженные файлы и результаты">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Удалить результаты
+    </button>
+</form>
+
+
+                    <a href="/uploads/{{ processed_filename }}" id="downloadBtn" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Скачать
+                    </a>
+                </div>
             </div>
-        
+
             <div class="results">
                 <table class="test-cases">
                     <thead>
@@ -453,14 +484,14 @@
                         {% for row in chatgpt_table %}
                             <tr>
                                 {% for key, cell in row.items %}
-                                    {% if key == "Приоритет" %}
+                                    {% if key == "Ответы" %}
                                         <td>
                                             {% if cell == 1 %}
-                                                <span style="color: red; font-weight: bold;">Высокий</span>
+                                                <span class="priority priority-high">Высокий</span>
                                             {% elif cell == 2 %}
-                                                <span style="color: orange; font-weight: bold;">Средний</span>
+                                                <span class="priority priority-medium">Средний</span>
                                             {% elif cell == 3 %}
-                                                <span style="color: green; font-weight: bold;">Низкий</span>
+                                                <span class="priority priority-low">Низкий</span>
                                             {% else %}
                                                 {{ cell }}
                                             {% endif %}
@@ -470,11 +501,11 @@
                                     {% endif %}
                                 {% endfor %}
                                 <td>
-                                    {% if row.Приоритет == 1 %}
+                                    {% if row.Ответы == 1 %}
                                         Проверить в первую очередь
-                                    {% elif row.Приоритет == 2 %}
+                                    {% elif row.Ответы == 2 %}
                                         Проверить после основных сценариев
-                                    {% elif row.Приоритет == 3 %}
+                                    {% elif row.Ответы == 3 %}
                                         Проверить в последнюю очередь
                                     {% else %}
                                         —
@@ -488,44 +519,34 @@
         </div>
         {% endif %}
 
-        <footer>
-            © 2025 Система приоритезации тест-кейсов. Все права защищены.
-        </footer>
+
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const owlAssistant = document.getElementById('owlAssistant');
             const owlMessage = document.getElementById('owlMessage');
-            
+
             const owlMessages = {
-                default: "Ух-ух! Я помогу с приоритезацией тест-кейсов!",
+                default: "Ух-ух! Я помогу с приоритизацией тест-кейсов!",
                 uploadBtn: "Нажми здесь, чтобы выбрать файл",
                 prioritizeBtn: "Нажми эту кнопку после выбора файла",
                 downloadBtn: "Ты можешь сохранить себе результат!",
                 changeFileBtn: "Хочешь выбрать другой файл?",
                 deleteResultsBtn: "Эта кнопка нужна, чтобы удалить результаты",
-                fileUploaded: "Файл загружен! Теперь нажмите 'Начать приоритезацию'",
+                fileUploaded: "Файл загружен! Теперь нажмите 'Начать приоритизацию'",
                 processing: "Идет анализ тест-кейсов...",
                 resultsReady: "Ух-ух! Результаты готовы! Можешь проверять таблицу"
             };
-            
-            // Инициализация состояний
+
+            // Инициализация элементов
             const uploadBtn = document.getElementById('uploadBtn');
             const prioritizeBtn = document.getElementById('prioritizeBtn');
             const downloadBtn = document.getElementById('downloadBtn');
             const changeFileBtn = document.getElementById('changeFileBtn');
             const deleteResultsBtn = document.getElementById('deleteResultsBtn');
             const fileInput = document.getElementById('fileInput');
-            const fileInfo = document.getElementById('fileInfo');
-            const fileName = document.getElementById('fileName');
-            const fileSize = document.getElementById('fileSize');
-            const resultsSection = document.getElementById('resultsSection');
-            const resultsTable = document.getElementById('resultsTable');
-
-            // Начальное состояние кнопок
-            prioritizeBtn.disabled = true;
-            changeFileBtn.disabled = true;
+            const uploadForm = document.getElementById('uploadForm');
 
             // Подсказки при наведении
             const elementsWithTooltips = [
@@ -537,116 +558,42 @@
             ];
 
             elementsWithTooltips.forEach(item => {
-                item.element.addEventListener('mouseenter', () => {
-                    owlMessage.textContent = item.message;
-                    owlMessage.style.opacity = 1;
-                });
-                item.element.addEventListener('mouseleave', () => {
-                    owlMessage.style.opacity = 0;
-                });
+                if (item.element) {
+                    item.element.addEventListener('mouseenter', () => {
+                        owlMessage.textContent = item.message;
+                        owlMessage.style.opacity = 1;
+                    });
+                    item.element.addEventListener('mouseleave', () => {
+                        owlMessage.style.opacity = 0;
+                    });
+                }
             });
 
             // Обработчики событий
-            uploadBtn.addEventListener('click', () => fileInput.click());
+            if (uploadBtn && fileInput) {
+                uploadBtn.addEventListener('click', () => fileInput.click());
 
-            fileInput.addEventListener('change', function(e) {
-                if (e.target.files.length > 0) {
-                    document.getElementById('uploadForm').submit();
-                }
-            });
+                fileInput.addEventListener('change', function(e) {
+                    if (e.target.files.length > 0) {
+                        uploadForm.submit();
 
-            changeFileBtn.addEventListener('click', () => {
-                fileInput.click();
-            });
-
-            prioritizeBtn.addEventListener('click', function() {
-                prioritizeBtn.innerHTML = '<div class="spinner"></div> Обработка...';
-                prioritizeBtn.disabled = true;
-                
-                owlMessage.textContent = owlMessages.processing;
-                owlMessage.style.opacity = 1;
-                
-                setTimeout(() => {
-                    showResults();
-                    prioritizeBtn.innerHTML = 'Начать приоритезацию';
-                    prioritizeBtn.disabled = false;
-                    
-                    owlMessage.textContent = owlMessages.resultsReady;
-                    setTimeout(() => owlMessage.style.opacity = 0, 3000);
-                }, 2000);
-            });
-
-            deleteResultsBtn.addEventListener('click', function() {
-                resultsSection.classList.add('hidden');
-                resultsTable.innerHTML = '';
-                if (!fileInput.files.length) {
-                    prioritizeBtn.disabled = true;
-                    changeFileBtn.disabled = true;
-                }
-            });
-
-            downloadBtn.addEventListener('click', function() {
-                alert('Функция скачивания будет реализована в бэкенде');
-            });
-
-            // Вспомогательные функции
-            function formatFileSize(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            }
-
-            function showResults() {
-                resultsSection.classList.remove('hidden');
-                const testData = [
-                    { id: '1', name: 'Что-то важное', priority: 'high', recommendation: 'Проверить в первую очередь' },
-                    { id: '2', name: 'Что-то среднее', priority: 'medium', recommendation: 'Проверить после основных сценариев' },
-                    { id: '3', name: 'Что-то не особо важное', priority: 'low', recommendation: 'Проверить в последнюю очередь' }
-                ];
-                
-                resultsTable.innerHTML = '';
-                testData.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${item.id}</td>
-                        <td>${item.name}</td>
-                        <td><span class="priority priority-${item.priority}">${getPriorityLabel(item.priority)}</span></td>
-                        <td>${item.recommendation}</td>
-                    `;
-                    resultsTable.appendChild(row);
+                        owlMessage.textContent = owlMessages.fileUploaded;
+                        owlMessage.style.opacity = 1;
+                        setTimeout(() => owlMessage.style.opacity = 0, 3000);
+                    }
                 });
             }
 
-            function getPriorityLabel(priority) {
-                return {
-                    high: 'Высокий',
-                    medium: 'Средний',
-                    low: 'Низкий'
-                }[priority];
-            }
-        });
-    </script>
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const fileInput = document.getElementById("fileInput");
-        const form = document.getElementById("uploadForm");
-
-        fileInput.addEventListener("change", function () {
-            if (fileInput.files.length > 0) {
-                form.submit();
-            }
-        });
-    });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const button = document.querySelector("a.btn.disabled");
-            if (button) {
-                button.addEventListener("click", function (e) {
-                    e.preventDefault();
+            if (changeFileBtn) {
+                changeFileBtn.addEventListener('click', () => {
+                    if (fileInput) fileInput.click();
                 });
+            }
+
+            // Блокировка кнопки приоритизации если нет файла
+            if (prioritizeBtn && !document.querySelector('.file-info')) {
+                prioritizeBtn.classList.add('disabled');
+                prioritizeBtn.setAttribute('aria-disabled', 'true');
             }
         });
     </script>

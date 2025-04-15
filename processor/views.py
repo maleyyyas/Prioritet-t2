@@ -1,3 +1,4 @@
+import re
 import shutil
 
 import openpyxl
@@ -64,28 +65,22 @@ def upload_file(request):
 
 
 def process_xlsx(file_path):
-    """Открывает Excel-файл, удаляет скрытые строки и пустые строки, затем сохраняет новый файл."""
-    wb = openpyxl.load_workbook(file_path)
+    """
+    Загружает Excel-файл, удаляет дубликаты по колонке '№',
+    удаляет полностью пустые строки и столбцы,
+    и сохраняет новый файл.
+    """
+    # Читаем файл
+    df = pd.read_excel(file_path)
 
-    for sheet in wb.worksheets:
-        # Удаляем скрытые строки
-        hidden_rows = [row for row in sheet.row_dimensions if sheet.row_dimensions[row].hidden]
-        for row in sorted(hidden_rows, reverse=True):
-            sheet.delete_rows(row)
+    # Удаляем дубликаты по колонке "№", оставляя только первую строку
+    if "№" in df.columns:
+        df = df.drop_duplicates(subset="№", keep="first")
 
-    # Сохраняем временный файл
-    temp_file_path = file_path.replace(".xlsx", "_temp.xlsx")
-    wb.save(temp_file_path)
+    columns_to_remove = ["Шаг", "Ожидаемый результат", "Примечания/вопросы", "Примечания/вопросы (аналитик)"]
+    df = df.drop(columns=[col for col in columns_to_remove if col in df.columns])
 
-    # Читаем и фильтруем через pandas (удаляем строки, где все значения NaN)
-    df = pd.read_excel(temp_file_path)
-    df = df.dropna(how="all")  # Удаляем строки, где все значения пустые
-    df = df.dropna(axis=1, how="all") # Удаляем столбцы, где ВСЕ значения пустые
-
-    # Удаляем временный файл
-    os.remove(temp_file_path)
-
-    # Сохраняем финальный результат
+    # Сохраняем новый файл
     new_file_path = file_path.replace(".xlsx", "_processed.xlsx")
     df.to_excel(new_file_path, index=False)
 
@@ -122,12 +117,14 @@ def convert_xlsx_to_text(file_path):
 
 
 def convert_text_to_xlsx(json_text, output_path):
-    """Принимает JSON и сохраняет его в .xlsx."""
+    """Принимает текст, извлекает JSON-массив и сохраняет его в .xlsx."""
     try:
+        # Преобразуем в DataFrame
         data = json.loads(json_text)
         df = pd.DataFrame(data)
         df.to_excel(output_path, index=False)
         return True
+
     except Exception as e:
         print(f"Ошибка преобразования: {e}")
         return None
@@ -135,22 +132,22 @@ def convert_text_to_xlsx(json_text, output_path):
 
 def apply_priorities_from_chatgpt(original_path, chatgpt_path):
     """
-    Обновляет колонку 'Приоритет' в оригинальном файле, используя данные из ChatGPT,
-    где есть колонки '№' и 'Приоритет'.
+    Обновляет колонку 'Ответы' в оригинальном файле, используя данные из ChatGPT,
+    где есть колонки '№' и 'Ответы'.
     """
     original_df = pd.read_excel(original_path)
     chatgpt_df = pd.read_excel(chatgpt_path)
 
     # Проверим, что нужные колонки есть
-    if "№" not in original_df.columns or "Приоритет" not in chatgpt_df.columns:
+    if "№" not in original_df.columns or "Ответы" not in chatgpt_df.columns:
         print("Ошибка: отсутствует нужная колонка в одном из файлов.")
         return None
 
     # Создаём маппинг: № → Приоритет
-    priority_mapping = chatgpt_df.set_index("№")["Приоритет"].to_dict()
+    priority_mapping = chatgpt_df.set_index("№")["Ответы"].to_dict()
 
     # Обновляем значения в оригинальной таблице
-    original_df["Приоритет"] = original_df["№"].map(priority_mapping).combine_first(original_df["Приоритет"])
+    original_df["Ответы"] = original_df["№"].map(priority_mapping).combine_first(original_df["Ответы"])
 
     # Сохраняем новый файл
     final_path = original_path.replace(".xlsx", "_final.xlsx")
@@ -178,7 +175,15 @@ def send_to_chatgpt(text_data, prompt):
     response = requests.post(url, headers=headers, json=payload)
 
     if response.status_code == 200:
-        return response.json()["choices"][0]["message"]["content"]
+        text = response.json()["choices"][0]["message"]["content"]
+        # Извлекаем массив из текста — от первой [ до последней ]
+        match = re.search(r'\[.*]', text, re.DOTALL)
+        if not match:
+            return text
+
+        cleaned_json = match.group(0)
+
+        return cleaned_json
 
     return None
 
@@ -204,7 +209,32 @@ def process_with_chatgpt(request):
             apply_priorities_from_chatgpt(original_file_path, chatgpt_path)
             try:
                 parsed_data = json.loads(processed_text)
+
+                # Сначала найдём все уникальные приоритеты
+                priorities = set()
+                for row in parsed_data:
+                    if isinstance(row, dict):
+                        p = row.get("Ответы")
+                        if isinstance(p, int):
+                            priorities.add(p)
+
+                # Вычисляем на сколько уменьшать
+                priority_shift = 0
+                if 1 not in priorities:
+                    if 2 not in priorities:
+                        priority_shift = 2  # ни 1, ни 2
+                    else:
+                        priority_shift = 1  # нет 1, но есть 2
+
+                # Применяем сдвиг
+                if priority_shift > 0:
+                    for row in parsed_data:
+                        if isinstance(row, dict) and isinstance(row.get("Ответы"), int):
+                            row["Ответы"] = max(1, row["Ответы"] - priority_shift)
+
+                # Сохраняем в сессию
                 request.session['chatgpt_table'] = parsed_data
+
             except Exception as e:
                 print("Ошибка парсинга ответа от ChatGPT:", e)
 
