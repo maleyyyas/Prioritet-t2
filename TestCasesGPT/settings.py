@@ -28,10 +28,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 CHATGPT_PROMPT = os.getenv("CHATGPT_PROMPT", "Скажи о том что нужно задать промпт в env файле проекта")
 
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -65,6 +62,17 @@ ALLOWED_HOSTS = [
 ]
 
 DEBUG = False
+
+#Настройки CSRF
+CSRF_TRUSTED_ORIGINS = [
+    'https://prioritet-t2.onrender.com',
+    'http://localhost',
+]
+
+# Обязательно для HTTPS на Render
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 TEMPLATES = [
     {
