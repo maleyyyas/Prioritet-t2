@@ -12,6 +12,9 @@ from django.http import FileResponse, Http404
 from .forms import UploadFileForm
 from .models import UploadedFile
 from django.conf import settings
+from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.worksheet.worksheet import Worksheet
 
 
 def upload_and_list_files(request):
@@ -32,6 +35,7 @@ def upload_and_list_files(request):
             new_file.is_current = True
             new_file.save()
             return redirect("home")
+        # 🔻 если form невалидна — мы просто "падаем" дальше и отрисовываем шаблон с ошибками
     else:
         form = UploadFileForm()
 
@@ -131,27 +135,49 @@ def convert_text_to_xlsx(json_text, output_path):
 
 
 def apply_priorities_from_chatgpt(original_path, chatgpt_path):
-    """
-    Обновляет колонку 'Ответы' в оригинальном файле, используя данные из ChatGPT,
-    где есть колонки '№' и 'Ответы'.
-    """
+    """Добавляет колонку Приоритет и сохраняет структуру вложенных строк."""
     original_df = pd.read_excel(original_path)
     chatgpt_df = pd.read_excel(chatgpt_path)
 
-    # Проверим, что нужные колонки есть
     if "№" not in original_df.columns or "Ответы" not in chatgpt_df.columns:
         print("Ошибка: отсутствует нужная колонка в одном из файлов.")
         return None
 
-    # Создаём маппинг: № → Приоритет
+    # Мапим приоритеты
     priority_mapping = chatgpt_df.set_index("№")["Ответы"].to_dict()
+    original_df["Приоритет"] = original_df["№"].map(priority_mapping)
 
-    # Обновляем значения в оригинальной таблице
-    original_df["Ответы"] = original_df["№"].map(priority_mapping).combine_first(original_df["Ответы"])
+    # Загружаем исходный файл с группировкой
+    wb = load_workbook(original_path)
+    ws: Worksheet = wb.active
 
-    # Сохраняем новый файл
+    # Ищем свободную колонку (например, следующую после последней)
+    gpt_col_idx = ws.max_column + 1
+    ws.cell(row=1, column=gpt_col_idx, value="Приоритет")
+
+    # Строим маппинг "№" → приоритет
+    num_col_index = None
+    for col_idx, cell in enumerate(ws[1], 1):
+        if str(cell.value).strip() == "№":
+            num_col_index = col_idx
+            break
+
+    if not num_col_index:
+        print("Не найдена колонка '№'")
+        return
+
+    # Применяем приоритет к каждой строке
+    for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+        row_num_cell = row[num_col_index - 1]
+        row_num_value = row_num_cell.value
+        priority = priority_mapping.get(row_num_value)
+        if priority is not None:
+            ws.cell(row=row_num_cell.row, column=gpt_col_idx, value=priority)
+
+    # Сохраняем новый файл, сохранив группировку
     final_path = original_path.replace(".xlsx", "_final.xlsx")
-    original_df.to_excel(final_path, index=False)
+    wb.save(final_path)
+    return final_path
 
 
 def send_to_chatgpt(text_data, prompt):

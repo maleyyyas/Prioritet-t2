@@ -433,6 +433,11 @@
                     </div>
                 </div>
             {% endif %}
+            {% if form.file.errors %}
+                <div class="error" style="color: red; margin-top: 5px;">
+                    {{ form.file.errors.0 }}
+                </div>
+            {% endif %}
         </div>
 
         {% if processed_filename and chatgpt_table %}
