@@ -58,6 +58,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'TestCasesGPT.urls'
 
+ALLOWED_HOSTS = [
+    'prioritet-t2.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
